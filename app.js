@@ -202,7 +202,7 @@
 
   // --- Timer controls ---
   function startTimer(minutes) {
-    totalSeconds = minutes * 60;
+    totalSeconds = Math.round(minutes * 60);
     remainingSeconds = totalSeconds;
     paused = false;
 
@@ -289,7 +289,7 @@
   }
 
   customStart.addEventListener("click", function () {
-    var val = parseInt(customInput.value, 10);
+    var val = parseFloat(customInput.value);
     if (val > 0 && val <= 180) {
       startTimer(val);
       customInput.value = "";
