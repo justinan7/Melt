@@ -1,0 +1,230 @@
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+  -webkit-tap-highlight-color: transparent;
+}
+
+:root {
+  --bg: #0a0a0a;
+  --fg: #f0f0f0;
+  --accent: #ff6b35;
+  --accent-dim: #ff6b3533;
+  --muted: #666;
+  --radius: 14px;
+}
+
+html, body {
+  height: 100%;
+  overflow: hidden;
+  font-family: -apple-system, BlinkMacSystemFont, "SF Pro Display", system-ui, sans-serif;
+  background: var(--bg);
+  color: var(--fg);
+  touch-action: manipulation;
+}
+
+body {
+  padding: env(safe-area-inset-top) env(safe-area-inset-right) env(safe-area-inset-bottom) env(safe-area-inset-left);
+}
+
+#app {
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+/* Screens */
+.screen {
+  display: none;
+  flex-direction: column;
+  align-items: center;
+  gap: 40px;
+  width: 100%;
+  max-width: 360px;
+  padding: 24px;
+}
+
+.screen.active {
+  display: flex;
+}
+
+/* Setup */
+.title {
+  font-size: 3rem;
+  font-weight: 700;
+  letter-spacing: -0.02em;
+}
+
+.presets {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 12px;
+  width: 100%;
+}
+
+.preset {
+  appearance: none;
+  border: none;
+  background: #1a1a1a;
+  color: var(--fg);
+  font-size: 1.5rem;
+  font-weight: 600;
+  padding: 20px;
+  border-radius: var(--radius);
+  cursor: pointer;
+  transition: background 0.15s, transform 0.1s;
+}
+
+.preset:active {
+  background: var(--accent-dim);
+  transform: scale(0.95);
+}
+
+.custom-input {
+  display: flex;
+  gap: 10px;
+  width: 100%;
+}
+
+.custom-input input {
+  flex: 1;
+  appearance: none;
+  border: 2px solid #222;
+  background: #111;
+  color: var(--fg);
+  font-size: 1.25rem;
+  padding: 14px 16px;
+  border-radius: var(--radius);
+  outline: none;
+  text-align: center;
+  font-weight: 500;
+}
+
+.custom-input input:focus {
+  border-color: var(--accent);
+}
+
+.custom-input input::placeholder {
+  color: var(--muted);
+}
+
+#custom-start {
+  appearance: none;
+  border: none;
+  background: var(--accent);
+  color: #fff;
+  font-size: 1.25rem;
+  font-weight: 600;
+  padding: 14px 24px;
+  border-radius: var(--radius);
+  cursor: pointer;
+  transition: opacity 0.15s, transform 0.1s;
+}
+
+#custom-start:active {
+  opacity: 0.8;
+  transform: scale(0.95);
+}
+
+/* Timer */
+.timer-display {
+  position: relative;
+  width: 260px;
+  height: 260px;
+}
+
+#ring {
+  width: 100%;
+  height: 100%;
+  transform: rotate(-90deg);
+}
+
+.ring-bg {
+  fill: none;
+  stroke: #1a1a1a;
+  stroke-width: 8;
+}
+
+.ring-fg {
+  fill: none;
+  stroke: var(--accent);
+  stroke-width: 8;
+  stroke-linecap: round;
+  stroke-dasharray: 565.49;
+  stroke-dashoffset: 0;
+  transition: stroke-dashoffset 0.3s linear;
+}
+
+.time-text {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 3.5rem;
+  font-weight: 300;
+  font-variant-numeric: tabular-nums;
+  letter-spacing: -0.02em;
+}
+
+.controls {
+  display: flex;
+  gap: 12px;
+}
+
+.ctrl-btn {
+  appearance: none;
+  border: none;
+  background: var(--accent);
+  color: #fff;
+  font-size: 1.1rem;
+  font-weight: 600;
+  padding: 14px 32px;
+  border-radius: var(--radius);
+  cursor: pointer;
+  transition: opacity 0.15s, transform 0.1s;
+}
+
+.ctrl-btn:active {
+  opacity: 0.8;
+  transform: scale(0.95);
+}
+
+.ctrl-btn.secondary {
+  background: #222;
+  color: var(--muted);
+}
+
+/* Done */
+.done-message {
+  font-size: 4rem;
+  font-weight: 700;
+  animation: pulse 1.5s ease-in-out infinite;
+}
+
+@keyframes pulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.4; }
+}
+
+/* Dark mode is default, but respect light preference with inverted scheme */
+@media (prefers-color-scheme: light) {
+  :root {
+    --bg: #fafafa;
+    --fg: #111;
+  }
+
+  .preset, .ctrl-btn.secondary {
+    background: #e8e8e8;
+  }
+
+  .custom-input input {
+    background: #f0f0f0;
+    border-color: #ddd;
+  }
+
+  .ring-bg {
+    stroke: #e0e0e0;
+  }
+}
