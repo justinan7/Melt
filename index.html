@@ -1,0 +1,59 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover, user-scalable=no">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="apple-mobile-web-app-title" content="Melt">
+  <meta name="theme-color" content="#0a0a0a">
+  <title>Melt</title>
+  <link rel="manifest" href="manifest.json">
+  <link rel="apple-touch-icon" href="icons/icon-180.png">
+  <link rel="icon" type="image/svg+xml" href="icons/icon.svg">
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <div id="app">
+    <!-- Setup screen -->
+    <div id="setup" class="screen active">
+      <h1 class="title">Melt</h1>
+      <div class="presets">
+        <button class="preset" data-minutes="1">1</button>
+        <button class="preset" data-minutes="3">3</button>
+        <button class="preset" data-minutes="5">5</button>
+        <button class="preset" data-minutes="10">10</button>
+        <button class="preset" data-minutes="15">15</button>
+        <button class="preset" data-minutes="25">25</button>
+      </div>
+      <div class="custom-input">
+        <input type="number" id="custom-minutes" min="1" max="180" placeholder="min" inputmode="numeric">
+        <button id="custom-start">Go</button>
+      </div>
+    </div>
+
+    <!-- Timer screen -->
+    <div id="timer" class="screen">
+      <div class="timer-display">
+        <svg id="ring" viewBox="0 0 200 200">
+          <circle class="ring-bg" cx="100" cy="100" r="90" />
+          <circle id="ring-progress" class="ring-fg" cx="100" cy="100" r="90" />
+        </svg>
+        <div id="time-left" class="time-text">0:00</div>
+      </div>
+      <div class="controls">
+        <button id="btn-pause" class="ctrl-btn">Pause</button>
+        <button id="btn-cancel" class="ctrl-btn secondary">Cancel</button>
+      </div>
+    </div>
+
+    <!-- Done screen -->
+    <div id="done" class="screen">
+      <div class="done-message">Done</div>
+      <button id="btn-reset" class="ctrl-btn">OK</button>
+    </div>
+  </div>
+
+  <script src="app.js"></script>
+</body>
+</html>
