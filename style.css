@@ -39,7 +39,7 @@ body {
   display: none;
   flex-direction: column;
   align-items: center;
-  gap: 40px;
+  gap: 32px;
   width: 100%;
   max-width: 360px;
   padding: 24px;
@@ -49,7 +49,6 @@ body {
   display: flex;
 }
 
-/* Full-screen mode (visual timer + visual done) */
 .screen-full {
   display: none;
   position: fixed;
@@ -90,6 +89,31 @@ body {
 .mode-btn.active {
   background: var(--accent);
   color: #fff;
+}
+
+/* Theme picker */
+.theme-picker {
+  display: flex;
+  gap: 12px;
+}
+
+.theme-swatch {
+  appearance: none;
+  border: 3px solid transparent;
+  width: 44px;
+  height: 44px;
+  border-radius: 50%;
+  cursor: pointer;
+  transition: border-color 0.2s, transform 0.15s;
+}
+
+.theme-swatch.active {
+  border-color: var(--fg);
+  transform: scale(1.1);
+}
+
+.theme-swatch:active {
+  transform: scale(0.9);
 }
 
 .presets {
@@ -174,14 +198,11 @@ body {
   left: 0;
   right: 0;
   height: 100%;
-  background: #4CAF50;
   transition: height 0.3s linear;
 }
 
 .visual-x {
   position: absolute;
-  top: 12px;
-  right: 12px;
   top: calc(12px + env(safe-area-inset-top));
   right: calc(12px + env(safe-area-inset-right));
   z-index: 20;
@@ -303,14 +324,6 @@ body {
 #done-flash {
   position: absolute;
   inset: 0;
-  animation: flash-colors 0.6s ease-in-out infinite;
-}
-
-@keyframes flash-colors {
-  0%   { background: #ff6b35; }
-  33%  { background: #ffeb3b; }
-  66%  { background: #4CAF50; }
-  100% { background: #ff6b35; }
 }
 
 .done-visual-content {

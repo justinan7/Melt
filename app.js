@@ -1,6 +1,67 @@
 (function () {
   "use strict";
 
+  // --- Themes ---
+  // Each theme defines a color ramp (fraction → rgb), background, and done flash colors.
+  var THEMES = {
+    sunrise: {
+      // Green → Yellow → Orange → Red
+      color: function (f) {
+        if (f > 0.5) {
+          var t = (f - 0.5) / 0.5;
+          return rgb(lerp(255, 76, t), lerp(235, 175, t), lerp(59, 80, t));
+        }
+        var t2 = f / 0.5;
+        return rgb(lerp(244, 255, t2), lerp(67, 235, t2), lerp(54, 59, t2));
+      },
+      done: ["#ff6b35", "#ffeb3b", "#4CAF50"]
+    },
+    ice: {
+      // White/ice-blue → Sky blue → Deep blue
+      color: function (f) {
+        if (f > 0.5) {
+          var t = (f - 0.5) / 0.5;
+          return rgb(lerp(100, 232, t), lerp(181, 244, t), lerp(246, 248, t));
+        }
+        var t2 = f / 0.5;
+        return rgb(lerp(21, 100, t2), lerp(101, 181, t2), lerp(192, 246, t2));
+      },
+      done: ["#e8f4f8", "#64B5F6", "#1565C0"]
+    },
+    lava: {
+      // Bright orange → Dark red → Near black
+      color: function (f) {
+        if (f > 0.5) {
+          var t = (f - 0.5) / 0.5;
+          return rgb(lerp(211, 255, t), lerp(47, 109, t), lerp(47, 0, t));
+        }
+        var t2 = f / 0.5;
+        return rgb(lerp(49, 211, t2), lerp(27, 47, t2), lerp(0, 47, t2));
+      },
+      done: ["#FF6D00", "#D32F2F", "#FF8F00"]
+    },
+    ocean: {
+      // Bright cyan → Teal → Deep navy
+      color: function (f) {
+        if (f > 0.5) {
+          var t = (f - 0.5) / 0.5;
+          return rgb(lerp(0, 77, t), lerp(137, 208, t), lerp(123, 225, t));
+        }
+        var t2 = f / 0.5;
+        return rgb(lerp(13, 0, t2), lerp(33, 137, t2), lerp(55, 123, t2));
+      },
+      done: ["#4DD0E1", "#00897B", "#0D47A1"]
+    }
+  };
+
+  function lerp(a, b, t) {
+    return Math.round(a + (b - a) * t);
+  }
+
+  function rgb(r, g, b) {
+    return "rgb(" + r + "," + g + "," + b + ")";
+  }
+
   // --- Elements ---
   var setupScreen = document.getElementById("setup");
   var visualTimerScreen = document.getElementById("visual-timer");
@@ -10,6 +71,7 @@
 
   var visualFill = document.getElementById("visual-fill");
   var visualCancel = document.getElementById("visual-cancel");
+  var doneFlash = document.getElementById("done-flash");
 
   var timeDisplay = document.getElementById("time-left");
   var ringProgress = document.getElementById("ring-progress");
@@ -22,6 +84,7 @@
 
   var modeVisualBtn = document.getElementById("mode-visual");
   var modeClassicBtn = document.getElementById("mode-classic");
+  var themePicker = document.getElementById("theme-picker");
 
   // Ring circumference
   var CIRCUMFERENCE = 2 * Math.PI * 90;
@@ -33,7 +96,29 @@
   var timerInterval = null;
   var paused = false;
   var endTime = 0;
-  var mode = "visual"; // "visual" or "classic"
+  var mode = "visual";
+  var currentTheme = "sunrise";
+  var doneFlashInterval = null;
+
+  // Restore saved preferences
+  try {
+    var saved = localStorage.getItem("melt-theme");
+    if (saved && THEMES[saved]) currentTheme = saved;
+    var savedMode = localStorage.getItem("melt-mode");
+    if (savedMode === "classic" || savedMode === "visual") mode = savedMode;
+  } catch (_) {}
+
+  // Apply saved mode to UI
+  if (mode === "classic") {
+    modeClassicBtn.classList.add("active");
+    modeVisualBtn.classList.remove("active");
+  }
+
+  // Apply saved theme to UI
+  var swatches = themePicker.querySelectorAll(".theme-swatch");
+  for (var si = 0; si < swatches.length; si++) {
+    swatches[si].classList.toggle("active", swatches[si].getAttribute("data-theme") === currentTheme);
+  }
 
   var allScreens = [setupScreen, visualTimerScreen, classicTimerScreen, doneVisualScreen, doneClassicScreen];
 
@@ -50,36 +135,32 @@
     mode = "visual";
     modeVisualBtn.classList.add("active");
     modeClassicBtn.classList.remove("active");
+    try { localStorage.setItem("melt-mode", mode); } catch (_) {}
   });
 
   modeClassicBtn.addEventListener("click", function () {
     mode = "classic";
     modeClassicBtn.classList.add("active");
     modeVisualBtn.classList.remove("active");
+    try { localStorage.setItem("melt-mode", mode); } catch (_) {}
   });
 
-  // --- Color interpolation for visual bar ---
-  // Green → Yellow → Orange → Red as time depletes
-  function fillColor(fraction) {
-    // fraction: 1 = full time left, 0 = no time left
-    var r, g, b;
-    if (fraction > 0.5) {
-      // Green to Yellow (1.0 → 0.5)
-      var t = (fraction - 0.5) / 0.5;
-      r = Math.round(255 * (1 - t) + 76 * t);
-      g = Math.round(235 * (1 - t) + 175 * t);
-      b = Math.round(59 * (1 - t) + 80 * t);
-    } else {
-      // Yellow to Red (0.5 → 0.0)
-      var t2 = fraction / 0.5;
-      r = Math.round(244 * (1 - t2) + 255 * t2);
-      g = Math.round(67 * (1 - t2) + 235 * t2);
-      b = Math.round(54 * (1 - t2) + 59 * t2);
-    }
-    return "rgb(" + r + "," + g + "," + b + ")";
-  }
+  // --- Theme picker ---
+  themePicker.addEventListener("click", function (e) {
+    var btn = e.target.closest(".theme-swatch");
+    if (!btn) return;
+    var theme = btn.getAttribute("data-theme");
+    if (!THEMES[theme]) return;
 
-  // --- Timer display (classic) ---
+    currentTheme = theme;
+    var all = themePicker.querySelectorAll(".theme-swatch");
+    for (var i = 0; i < all.length; i++) {
+      all[i].classList.toggle("active", all[i] === btn);
+    }
+    try { localStorage.setItem("melt-theme", theme); } catch (_) {}
+  });
+
+  // --- Timer display ---
   function formatTime(sec) {
     var m = Math.floor(sec / 60);
     var s = sec % 60;
@@ -92,11 +173,31 @@
     if (mode === "visual") {
       var pct = (fraction * 100).toFixed(2);
       visualFill.style.height = pct + "%";
-      visualFill.style.background = fillColor(fraction);
+      visualFill.style.background = THEMES[currentTheme].color(fraction);
     } else {
       timeDisplay.textContent = formatTime(remainingSeconds);
       ringProgress.style.strokeDashoffset = CIRCUMFERENCE * (1 - fraction);
     }
+  }
+
+  // --- Done flash animation (JS-driven for theme colors) ---
+  function startDoneFlash() {
+    var colors = THEMES[currentTheme].done;
+    var idx = 0;
+    doneFlash.style.background = colors[0];
+
+    doneFlashInterval = setInterval(function () {
+      idx = (idx + 1) % colors.length;
+      doneFlash.style.background = colors[idx];
+    }, 200);
+  }
+
+  function stopDoneFlash() {
+    if (doneFlashInterval) {
+      clearInterval(doneFlashInterval);
+      doneFlashInterval = null;
+    }
+    doneFlash.style.background = "transparent";
   }
 
   // --- Timer controls ---
@@ -134,6 +235,7 @@
 
   function finish() {
     if (mode === "visual") {
+      startDoneFlash();
       showScreen(doneVisualScreen);
     } else {
       showScreen(doneClassicScreen);
@@ -145,7 +247,6 @@
   }
 
   // --- Pause / Resume ---
-  // Classic mode
   function togglePause() {
     if (paused) {
       endTime = Date.now() + remainingSeconds * 1000;
@@ -157,7 +258,6 @@
     }
   }
 
-  // Visual mode: tap anywhere to pause/resume
   visualFill.addEventListener("click", function () {
     if (paused) {
       endTime = Date.now() + remainingSeconds * 1000;
@@ -176,11 +276,11 @@
   }
 
   function reset() {
+    stopDoneFlash();
     showScreen(setupScreen);
   }
 
   // --- Event listeners ---
-  // Presets
   var presets = document.querySelectorAll(".preset");
   for (var i = 0; i < presets.length; i++) {
     presets[i].addEventListener("click", function () {
@@ -188,7 +288,6 @@
     });
   }
 
-  // Custom input
   customStart.addEventListener("click", function () {
     var val = parseInt(customInput.value, 10);
     if (val > 0 && val <= 180) {
@@ -201,12 +300,10 @@
     if (e.key === "Enter") customStart.click();
   });
 
-  // Classic controls
   btnPause.addEventListener("click", togglePause);
   btnCancel.addEventListener("click", cancel);
   btnReset.addEventListener("click", reset);
 
-  // Visual controls
   visualCancel.addEventListener("click", function (e) {
     e.stopPropagation();
     cancel();
@@ -237,7 +334,6 @@
     }
   });
 
-  // Patch startTimer to request wake lock
   var _origStart = startTimer;
   startTimer = function (minutes) {
     _origStart(minutes);
