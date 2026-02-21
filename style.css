@@ -34,12 +34,12 @@ body {
   justify-content: center;
 }
 
-/* Screens */
+/* --- Screens --- */
 .screen {
   display: none;
   flex-direction: column;
   align-items: center;
-  gap: 40px;
+  gap: 32px;
   width: 100%;
   max-width: 360px;
   padding: 24px;
@@ -49,11 +49,71 @@ body {
   display: flex;
 }
 
-/* Setup */
+.screen-full {
+  display: none;
+  position: fixed;
+  inset: 0;
+  z-index: 10;
+}
+
+.screen-full.active {
+  display: block;
+}
+
+/* --- Setup --- */
 .title {
   font-size: 3rem;
   font-weight: 700;
   letter-spacing: -0.02em;
+}
+
+.mode-toggle {
+  display: flex;
+  background: #1a1a1a;
+  border-radius: var(--radius);
+  overflow: hidden;
+}
+
+.mode-btn {
+  appearance: none;
+  border: none;
+  background: transparent;
+  color: var(--muted);
+  font-size: 0.95rem;
+  font-weight: 600;
+  padding: 10px 24px;
+  cursor: pointer;
+  transition: background 0.2s, color 0.2s;
+}
+
+.mode-btn.active {
+  background: var(--accent);
+  color: #fff;
+}
+
+/* Theme picker */
+.theme-picker {
+  display: flex;
+  gap: 12px;
+}
+
+.theme-swatch {
+  appearance: none;
+  border: 3px solid transparent;
+  width: 44px;
+  height: 44px;
+  border-radius: 50%;
+  cursor: pointer;
+  transition: border-color 0.2s, transform 0.15s;
+}
+
+.theme-swatch.active {
+  border-color: var(--fg);
+  transform: scale(1.1);
+}
+
+.theme-swatch:active {
+  transform: scale(0.9);
 }
 
 .presets {
@@ -127,7 +187,55 @@ body {
   transform: scale(0.95);
 }
 
-/* Timer */
+/* --- Visual Timer (full screen) --- */
+#visual-timer {
+  background: var(--bg);
+}
+
+#visual-fill {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  height: 100%;
+  transition: height 0.3s linear;
+}
+
+.visual-x {
+  position: absolute;
+  top: calc(12px + env(safe-area-inset-top));
+  right: calc(12px + env(safe-area-inset-right));
+  z-index: 20;
+  appearance: none;
+  border: none;
+  background: rgba(0, 0, 0, 0.3);
+  color: rgba(255, 255, 255, 0.6);
+  font-size: 1.5rem;
+  line-height: 1;
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.visual-x:active {
+  background: rgba(0, 0, 0, 0.5);
+}
+
+/* Paused overlay */
+#visual-timer.paused #visual-fill {
+  animation: breathe 2s ease-in-out infinite;
+}
+
+@keyframes breathe {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.6; }
+}
+
+/* --- Classic Timer --- */
 .timer-display {
   position: relative;
   width: 260px;
@@ -196,7 +304,7 @@ body {
   color: var(--muted);
 }
 
-/* Done */
+/* --- Done (classic) --- */
 .done-message {
   font-size: 4rem;
   font-weight: 700;
@@ -208,11 +316,56 @@ body {
   50% { opacity: 0.4; }
 }
 
-/* Dark mode is default, but respect light preference with inverted scheme */
+/* --- Done (visual, full screen) --- */
+#done-visual {
+  background: var(--bg);
+}
+
+#done-flash {
+  position: absolute;
+  inset: 0;
+}
+
+.done-visual-content {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 2;
+}
+
+.done-check {
+  font-size: 30vmin;
+  color: #fff;
+  text-shadow: 0 0 40px rgba(0, 0, 0, 0.4);
+  animation: pop-in 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275) both;
+}
+
+@keyframes pop-in {
+  0% { transform: scale(0); opacity: 0; }
+  100% { transform: scale(1); opacity: 1; }
+}
+
+.done-tap-target {
+  position: absolute;
+  inset: 0;
+  z-index: 3;
+  appearance: none;
+  border: none;
+  background: transparent;
+  cursor: pointer;
+}
+
+/* --- Light theme --- */
 @media (prefers-color-scheme: light) {
   :root {
     --bg: #fafafa;
     --fg: #111;
+  }
+
+  .mode-toggle {
+    background: #e8e8e8;
   }
 
   .preset, .ctrl-btn.secondary {
@@ -226,5 +379,14 @@ body {
 
   .ring-bg {
     stroke: #e0e0e0;
+  }
+
+  #visual-timer {
+    background: var(--bg);
+  }
+
+  .visual-x {
+    background: rgba(255, 255, 255, 0.4);
+    color: rgba(0, 0, 0, 0.5);
   }
 }
