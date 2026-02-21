@@ -1,4 +1,4 @@
-var CACHE_NAME = "melt-v1";
+var CACHE_NAME = "melt-v2";
 var ASSETS = [
   ".",
   "index.html",

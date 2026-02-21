@@ -1,38 +1,85 @@
 (function () {
   "use strict";
 
-  // Elements
+  // --- Elements ---
   var setupScreen = document.getElementById("setup");
-  var timerScreen = document.getElementById("timer");
-  var doneScreen = document.getElementById("done");
+  var visualTimerScreen = document.getElementById("visual-timer");
+  var classicTimerScreen = document.getElementById("timer");
+  var doneVisualScreen = document.getElementById("done-visual");
+  var doneClassicScreen = document.getElementById("done");
+
+  var visualFill = document.getElementById("visual-fill");
+  var visualCancel = document.getElementById("visual-cancel");
+
   var timeDisplay = document.getElementById("time-left");
   var ringProgress = document.getElementById("ring-progress");
   var btnPause = document.getElementById("btn-pause");
   var btnCancel = document.getElementById("btn-cancel");
   var btnReset = document.getElementById("btn-reset");
+  var btnResetVisual = document.getElementById("btn-reset-visual");
   var customInput = document.getElementById("custom-minutes");
   var customStart = document.getElementById("custom-start");
 
-  // Ring circumference (2 * PI * r where r=90)
+  var modeVisualBtn = document.getElementById("mode-visual");
+  var modeClassicBtn = document.getElementById("mode-classic");
+
+  // Ring circumference
   var CIRCUMFERENCE = 2 * Math.PI * 90;
   ringProgress.style.strokeDasharray = CIRCUMFERENCE;
 
-  // State
+  // --- State ---
   var totalSeconds = 0;
   var remainingSeconds = 0;
   var timerInterval = null;
   var paused = false;
   var endTime = 0;
+  var mode = "visual"; // "visual" or "classic"
+
+  var allScreens = [setupScreen, visualTimerScreen, classicTimerScreen, doneVisualScreen, doneClassicScreen];
 
   // --- Screen transitions ---
   function showScreen(screen) {
-    setupScreen.classList.remove("active");
-    timerScreen.classList.remove("active");
-    doneScreen.classList.remove("active");
+    for (var i = 0; i < allScreens.length; i++) {
+      allScreens[i].classList.remove("active");
+    }
     screen.classList.add("active");
   }
 
-  // --- Timer display ---
+  // --- Mode toggle ---
+  modeVisualBtn.addEventListener("click", function () {
+    mode = "visual";
+    modeVisualBtn.classList.add("active");
+    modeClassicBtn.classList.remove("active");
+  });
+
+  modeClassicBtn.addEventListener("click", function () {
+    mode = "classic";
+    modeClassicBtn.classList.add("active");
+    modeVisualBtn.classList.remove("active");
+  });
+
+  // --- Color interpolation for visual bar ---
+  // Green → Yellow → Orange → Red as time depletes
+  function fillColor(fraction) {
+    // fraction: 1 = full time left, 0 = no time left
+    var r, g, b;
+    if (fraction > 0.5) {
+      // Green to Yellow (1.0 → 0.5)
+      var t = (fraction - 0.5) / 0.5;
+      r = Math.round(255 * (1 - t) + 76 * t);
+      g = Math.round(235 * (1 - t) + 175 * t);
+      b = Math.round(59 * (1 - t) + 80 * t);
+    } else {
+      // Yellow to Red (0.5 → 0.0)
+      var t2 = fraction / 0.5;
+      r = Math.round(244 * (1 - t2) + 255 * t2);
+      g = Math.round(67 * (1 - t2) + 235 * t2);
+      b = Math.round(54 * (1 - t2) + 59 * t2);
+    }
+    return "rgb(" + r + "," + g + "," + b + ")";
+  }
+
+  // --- Timer display (classic) ---
   function formatTime(sec) {
     var m = Math.floor(sec / 60);
     var s = sec % 60;
@@ -40,9 +87,16 @@
   }
 
   function updateDisplay() {
-    timeDisplay.textContent = formatTime(remainingSeconds);
-    var progress = 1 - remainingSeconds / totalSeconds;
-    ringProgress.style.strokeDashoffset = CIRCUMFERENCE * progress;
+    var fraction = remainingSeconds / totalSeconds;
+
+    if (mode === "visual") {
+      var pct = (fraction * 100).toFixed(2);
+      visualFill.style.height = pct + "%";
+      visualFill.style.background = fillColor(fraction);
+    } else {
+      timeDisplay.textContent = formatTime(remainingSeconds);
+      ringProgress.style.strokeDashoffset = CIRCUMFERENCE * (1 - fraction);
+    }
   }
 
   // --- Timer controls ---
@@ -50,11 +104,17 @@
     totalSeconds = minutes * 60;
     remainingSeconds = totalSeconds;
     paused = false;
-    btnPause.textContent = "Pause";
+
+    if (mode === "visual") {
+      visualTimerScreen.classList.remove("paused");
+      showScreen(visualTimerScreen);
+    } else {
+      btnPause.textContent = "Pause";
+      showScreen(classicTimerScreen);
+    }
+
     endTime = Date.now() + totalSeconds * 1000;
     updateDisplay();
-    showScreen(timerScreen);
-
     timerInterval = setInterval(tick, 250);
   }
 
@@ -73,17 +133,21 @@
   }
 
   function finish() {
-    showScreen(doneScreen);
+    if (mode === "visual") {
+      showScreen(doneVisualScreen);
+    } else {
+      showScreen(doneClassicScreen);
+    }
 
-    // Vibrate if supported
     if (navigator.vibrate) {
       navigator.vibrate([200, 100, 200, 100, 200]);
     }
   }
 
+  // --- Pause / Resume ---
+  // Classic mode
   function togglePause() {
     if (paused) {
-      // Resuming — recalculate end time
       endTime = Date.now() + remainingSeconds * 1000;
       paused = false;
       btnPause.textContent = "Pause";
@@ -92,6 +156,18 @@
       btnPause.textContent = "Resume";
     }
   }
+
+  // Visual mode: tap anywhere to pause/resume
+  visualFill.addEventListener("click", function () {
+    if (paused) {
+      endTime = Date.now() + remainingSeconds * 1000;
+      paused = false;
+      visualTimerScreen.classList.remove("paused");
+    } else {
+      paused = true;
+      visualTimerScreen.classList.add("paused");
+    }
+  });
 
   function cancel() {
     clearInterval(timerInterval);
@@ -104,7 +180,7 @@
   }
 
   // --- Event listeners ---
-  // Preset buttons
+  // Presets
   var presets = document.querySelectorAll(".preset");
   for (var i = 0; i < presets.length; i++) {
     presets[i].addEventListener("click", function () {
@@ -122,24 +198,29 @@
   });
 
   customInput.addEventListener("keydown", function (e) {
-    if (e.key === "Enter") {
-      customStart.click();
-    }
+    if (e.key === "Enter") customStart.click();
   });
 
-  // Timer controls
+  // Classic controls
   btnPause.addEventListener("click", togglePause);
   btnCancel.addEventListener("click", cancel);
   btnReset.addEventListener("click", reset);
 
-  // Prevent pull-to-refresh on mobile
+  // Visual controls
+  visualCancel.addEventListener("click", function (e) {
+    e.stopPropagation();
+    cancel();
+  });
+  btnResetVisual.addEventListener("click", reset);
+
+  // Prevent pull-to-refresh
   document.body.addEventListener("touchmove", function (e) {
     if (!e.target.closest("input")) {
       e.preventDefault();
     }
   }, { passive: false });
 
-  // Keep screen awake via Wake Lock API
+  // --- Wake Lock ---
   var wakeLock = null;
 
   async function requestWakeLock() {
@@ -147,9 +228,7 @@
       if ("wakeLock" in navigator) {
         wakeLock = await navigator.wakeLock.request("screen");
       }
-    } catch (_) {
-      // Wake Lock not available or denied — no problem
-    }
+    } catch (_) {}
   }
 
   document.addEventListener("visibilitychange", function () {
@@ -158,14 +237,14 @@
     }
   });
 
-  // Request wake lock when timer starts (patched into startTimer)
+  // Patch startTimer to request wake lock
   var _origStart = startTimer;
   startTimer = function (minutes) {
     _origStart(minutes);
     requestWakeLock();
   };
 
-  // Register service worker
+  // --- Service Worker ---
   if ("serviceWorker" in navigator) {
     navigator.serviceWorker.register("sw.js");
   }

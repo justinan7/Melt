@@ -18,6 +18,10 @@
     <!-- Setup screen -->
     <div id="setup" class="screen active">
       <h1 class="title">Melt</h1>
+      <div class="mode-toggle">
+        <button id="mode-visual" class="mode-btn active">Visual</button>
+        <button id="mode-classic" class="mode-btn">Classic</button>
+      </div>
       <div class="presets">
         <button class="preset" data-minutes="1">1</button>
         <button class="preset" data-minutes="3">3</button>
@@ -32,7 +36,13 @@
       </div>
     </div>
 
-    <!-- Timer screen -->
+    <!-- Visual timer screen (kid-friendly, default) -->
+    <div id="visual-timer" class="screen-full">
+      <div id="visual-fill"></div>
+      <button id="visual-cancel" class="visual-x" aria-label="Cancel">&times;</button>
+    </div>
+
+    <!-- Classic timer screen (adults) -->
     <div id="timer" class="screen">
       <div class="timer-display">
         <svg id="ring" viewBox="0 0 200 200">
@@ -47,7 +57,16 @@
       </div>
     </div>
 
-    <!-- Done screen -->
+    <!-- Done screen (visual mode) -->
+    <div id="done-visual" class="screen-full">
+      <div id="done-flash"></div>
+      <div class="done-visual-content">
+        <div class="done-check">&#10003;</div>
+      </div>
+      <button id="btn-reset-visual" class="done-tap-target" aria-label="OK"></button>
+    </div>
+
+    <!-- Done screen (classic mode) -->
     <div id="done" class="screen">
       <div class="done-message">Done</div>
       <button id="btn-reset" class="ctrl-btn">OK</button>
